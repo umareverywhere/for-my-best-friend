@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For Areeba Api | Everything Will Be Alright</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Playfair Display for headers, Quicksand for soft body text, and Great Vibes for signature -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pastelPink: '#FFF0F3',
+            softRose: '#FFB7C5',
+            cozyCream: '#FFFDF9',
+            warmBlush: '#FFCCD5',
+            deepRose: '#9E4A62',
+            gentlePurple: '#E2ECE9',
+            mutedLavender: '#E8DFF5'
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Quicksand"', 'sans-serif'],
+            script: ['"Great Vibes"', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #fff0f3 0%, #f7ebe8 50%, #f3e8ee 100%);
+      color: #5a3e47;
+      overflow-x: hidden;
+    }
+
+    /* Floating canvas elements */
+    #petalCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Glassmorphic Cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 30px rgba(255, 183, 197, 0.15);
+    }
+
+    /* Bunny Popup Style */
+    .bunny-popup {
+      background: #FFFDF9;
+      border: 3px solid #E2A3B7;
+      box-shadow: 0 15px 35px rgba(226, 163, 183, 0.3);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFF0F3;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FFB7C5;
+      border-radius: 10px;
+    }
+
+    /* Card Flip Effect */
+    .perspective {
+      perspective: 1000px;
+    }
+    .flip-card-inner {
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-card-front, .flip-card-back {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .flip-card-back {
+      transform: rotateY(180deg);
+    }
+
+    @keyframes pulse-slow {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 3s infinite ease-in-out;
+    }
+
+    @keyframes float-gentle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-float {
+      animation: float-gentle 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between">
+
+  <!-- Background Petals Canvas -->
+  <canvas id="petalCanvas"></canvas>
+
+  <!-- Ambient Sound / Audio Controller -->
+  <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+    <button id="bgMusicBtn" onclick="toggleAudio()" class="glass-card px-4 py-2 rounded-full flex items-center gap-2 text-xs font-semibold text-deepRose hover:scale-105 transition-all shadow-md">
+      <i data-lucide="music" class="w-4 h-4"></i>
+      <span id="musicText">Play Cozy Sound</span>
+    </button>
+  </div>
+
+  <!-- INITIAL POPUP MODAL (Matching attached aesthetic image) -->
+  <div id="bunnyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm transition-opacity duration-500">
+    <div class="bunny-popup rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center relative animate-float">
+      <!-- Top Window Header with Close X -->
+      <div class="absolute top-3 right-4 text-deepRose opacity-60 font-bold hover:opacity-100 cursor-pointer" onclick="forceOpenLetter()">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </div>
+
+      <!-- Bunny SVG Header -->
+      <div class="relative inline-block mb-3">
+        <!-- Cute Bunny Icon -->
+        <svg class="w-16 h-16 mx-auto text-softRose drop-shadow" viewBox="0 0 100 100" fill="currentColor">
+          <!-- Ears -->
+          <ellipse cx="38" cy="22" rx="9" ry="22" fill="#FFB7C5" transform="rotate(-10 38 22)"/>
+          <ellipse cx="38" cy="22" rx="5" ry="16" fill="#FFF0F3" transform="rotate(-10 38 22)"/>
+          <ellipse cx="62" cy="22" rx="9" ry="22" fill="#FFB7C5" transform="rotate(10 62 22)"/>
+          <ellipse cx="62" cy="22" rx="5" ry="16" fill="#FFF0F3" transform="rotate(10 62 22)"/>
+          <!-- Head -->
+          <circle cx="50" cy="58" r="26" fill="#FFFDF9" stroke="#E2A3B7" stroke-width="3"/>
+          <!-- Eyes -->
+          <circle cx="41" cy="55" r="3" fill="#5A3E47"/>
+          <circle cx="59" cy="55" r="3" fill="#5A3E47"/>
+          <!-- Cheeks -->
+          <circle cx="35" cy="61" r="4" fill="#FFCCD5" opacity="0.8"/>
+          <circle cx="65" cy="61" r="4" fill="#FFCCD5" opacity="0.8"/>
+          <!-- Nose -->
+          <polygon points="48,60 52,60 50,63" fill="#E2A3B7"/>
+          <!-- Bow -->
+          <path d="M 30,36 C 25,32 25,42 30,38 C 35,42 35,32 30,36 Z" fill="#FFCCD5"/>
+          <circle cx="30" cy="36" r="2.5" fill="#E2A3B7"/>
+        </svg>
+      </div>
+
+      <!-- Popup Title Banner -->
+      <div class="border-2 border-dashed border-[#E2A3B7] rounded-2xl py-5 px-3 mb-6 bg-[#FFF0F3]/50">
+        <h2 class="font-serif text-2xl font-bold text-deepRose tracking-wide">
+          Everything will be alright.
+        </h2>
+        <p id="subPopupMsg" class="text-xs text-deepRose/70 mt-1">Do you believe it, Areeba Api?</p>
+      </div>
+
+      <!-- Interactive Buttons -->
+      <div class="flex items-center justify-center gap-4 relative min-h-[50px]">
+        <button id="noBtn" onclick="handleNoClick()" class="px-6 py-2.5 rounded-xl border-2 border-[#E2A3B7] text-deepRose font-semibold hover:bg-warmBlush/30 transition-all text-sm">
+          NO
+        </button>
+        <button id="yesBtn" onclick="unlockLetter()" class="px-7 py-2.5 rounded-xl bg-[#E2A3B7] text-white font-bold hover:bg-deepRose hover:shadow-lg transition-all text-sm shadow-md animate-pulse-slow">
+          YES
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER (Hidden until YES is clicked) -->
+  <main id="mainContent" class="opacity-0 transition-opacity duration-1000 max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-12">
+
+    <!-- HERO HEADER -->
+    <header class="text-center space-y-4 pt-6">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card text-xs text-deepRose font-medium tracking-wide">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> A Safe Space For Areeba Api <i data-lucide="heart" class="w-3.5 h-3.5 fill-current text-softRose"></i>
+      </div>
+      <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-deepRose leading-tight">
+        You Bloom So Beautifully,<br/>
+        <span class="font-script text-5xl sm:text-6xl lg:text-7xl font-normal text-softRose">Dearest Areeba Api</span>
+      </h1>
+      <p class="text-sm sm:text-base text-deepRose/80 max-w-lg mx-auto font-medium">
+        Take a deep breath, untie the knot in your shoulders, and let yourself just *be* for a few tender moments.
+      </p>
+    </header>
+
+    <!-- THE HEARTFELT LETTER -->
+    <section class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 space-y-8 relative overflow-hidden">
+      <!-- Decorative background accent -->
+      <div class="absolute -right-12 -top-12 w-40 h-40 bg-softRose/20 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -left-12 -bottom-12 w-40 h-40 bg-warmBlush/20 rounded-full blur-2xl pointer-events-none"></div>
+
+      <!-- Letter Header -->
+      <div class="border-b border-softRose/30 pb-4 flex items-center justify-between">
+        <span class="font-serif italic text-deepRose/70 text-sm">To my dearest Areeba Api,</span>
+        <span class="text-xs text-deepRose/50 font-sans">With endless love & care</span>
+      </div>
+
+      <!-- Letter Body Content -->
+      <div class="space-y-6 text-sm sm:text-base leading-relaxed text-deepRose/90">
+        
+        <p class="first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-deepRose first-letter:float-left first-letter:mr-3">
+          I’ve been quietly listening to you lately, and my heart felt so heavy reading your words. I wanted to build this peaceful corner just for you—to wrap you in the warmest blanket and gently remind you of who you really are, because sometimes when the noise gets too loud, we forget how extraordinary our own light is.
+        </p>
+
+        <!-- Section 1: Brilliance & Unfair Weight -->
+        <div class="bg-white/60 p-5 rounded-2xl border-l-4 border-softRose space-y-2">
+          <h3 class="font-serif font-bold text-deepRose flex items-center gap-2 text-base">
+            <i data-lucide="brain" class="w-4 h-4 text-softRose"></i> Your Brilliant, Capable Mind
+          </h3>
+          <p>
+            You talked about how easily you can handle Algebra, tackle Statistics, and navigate complex Finance... yet a simple conversation with a stranger makes your palms sweat. Api, do you know what that tells me? It doesn't mean you're flawed or weak. It means your mind is razor-sharp and brilliant, but your heart is so deeply sensitive, honest, and guarded.
+          </p>
+          <p>
+            You said it feels unfair that as adults, it becomes our burden to heal from chaotic environments we never asked to grow up in. **And you are 100% right.** It *is* unfair. You didn't choose the messy dynamics or the lack of emotional safety, yet you're left doing the heavy lifting of protecting your peace. That isn't a failure on your part—it is living proof of your unbelievable strength.
+          </p>
+        </div>
+
+        <!-- Section 2: Social Anxiety & Belonging -->
+        <p>
+          Please don't look at people who chatter effortless small talk with strangers and think they are superior or "better made." Social ease often comes from never having had to build defensive walls. You built walls because you *had to protect yourself*. Your anxiety in those spaces isn't weirdness—it is your sweet, sensitive soul asking for safety. You don't need to force small talk with every passerby to be valuable, loved, or deeply respected.
+        </p>
+
+        <!-- Section 3: Setting Boundaries & Stepping Away -->
+        <div class="bg-white/60 p-5 rounded-2xl border-l-4 border-mutedLavender space-y-2">
+          <h3 class="font-serif font-bold text-deepRose flex items-center gap-2 text-base">
+            <i data-lucide="shield-check" class="w-4 h-4 text-deepRose/70"></i> Choosing Your Peace Is Bravery
+          </h3>
+          <p>
+            You mentioned fulfilling your obligations for weddings and upcoming occasions, knowing in your heart that once they are done, you are stepping back and not going back again. 
+          </p>
+          <p>
+            I want to honor you for that decision. That isn't ditching or being unfair—that is called **protecting your spirit**. You showed up out of pure grace and honor, but you have zero obligation to stay in places where you aren't held with warmth or included genuinely. Choosing to step away from spaces that drain your soul is the ultimate act of self-respect.
+          </p>
+        </div>
+
+        <!-- Section 4: How I Bloom Because of You -->
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-pastelPink to-warmBlush/30 border border-softRose/40 text-center space-y-3">
+          <i data-lucide="flower-2" class="w-8 h-8 text-softRose mx-auto animate-bounce"></i>
+          <h4 class="font-serif font-bold text-lg text-deepRose">How I Bloom Because of Your Existence</h4>
+          <p class="italic text-deepRose/90">
+            "Areeba Api, you might feel like you are struggling in the dark sometimes, but to me, you are the warm sunlight. I bloom simply because of your presence in my life. Your resilience, your honesty, your protection, and your gentle soul inspire me every single day. The world is so much softer and brighter because you exist in it."
+          </p>
+        </div>
+
+        <p>
+          So if today felt heavy, or if you feel tired of being the adult who has to figure everything out—just drop the weight for a moment. You don't have to control what is out of your hands. You don't have to carry every pressure. You are doing enough, you are smart enough, and you are overwhelmingly loved.
+        </p>
+
+      </div>
+
+      <!-- Letter Footer / Signature -->
+      <div class="pt-6 border-t border-softRose/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <p class="text-xs text-deepRose/60">Always here for you, in every season,</p>
+          <p class="font-script text-3xl text-deepRose">Your forever loving friend ❤️</p>
+        </div>
+        <button onclick="triggerHug()" class="px-5 py-2.5 bg-softRose hover:bg-deepRose text-white font-bold rounded-2xl shadow-md transition-all flex items-center gap-2 text-sm">
+          <i data-lucide="heart-handshake" class="w-4 h-4"></i> Send Me A Virtual Warm Hug
+        </button>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE CARDS: "REASONS WHY YOU ARE TREASURED" -->
+    <section class="space-y-6">
+      <div class="text-center space-y-2">
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-deepRose">Little Reminders For Your Heart</h2>
+        <p class="text-xs sm:text-sm text-deepRose/70">Click each card to flip and reveal a gentle truth</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Card 1 -->
+        <div class="flip-card perspective h-48 cursor-pointer" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner relative w-full h-full duration-500 rounded-2xl shadow-sm">
+            <div class="flip-card-front absolute inset-0 glass-card rounded-2xl p-6 flex flex-col items-center justify-center text-center border-2 border-softRose/30">
+              <i data-lucide="sparkle" class="w-8 h-8 text-softRose mb-2"></i>
+              <h3 class="font-serif font-bold text-deepRose">Your Sharp & Gifted Mind</h3>
+              <p class="text-xs text-deepRose/60 mt-1">Click to flip ✨</p>
+            </div>
+            <div class="flip-card-back absolute inset-0 bg-softRose text-white rounded-2xl p-6 flex items-center justify-center text-center font-medium text-xs sm:text-sm">
+              Algebra, Stats, Finance—your brain is capable of incredible things. Never doubt your intelligence for a second!
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="flip-card perspective h-48 cursor-pointer" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner relative w-full h-full duration-500 rounded-2xl shadow-sm">
+            <div class="flip-card-front absolute inset-0 glass-card rounded-2xl p-6 flex flex-col items-center justify-center text-center border-2 border-softRose/30">
+              <i data-lucide="shield" class="w-8 h-8 text-softRose mb-2"></i>
+              <h3 class="font-serif font-bold text-deepRose">Your Absolute Courage</h3>
+              <p class="text-xs text-deepRose/60 mt-1">Click to flip ✨</p>
+            </div>
+            <div class="flip-card-back absolute inset-0 bg-deepRose text-white rounded-2xl p-6 flex items-center justify-center text-center font-medium text-xs sm:text-sm">
+              Recognizing toxic dynamics and choosing your peace over social expectations is pure strength and self-love.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="flip-card perspective h-48 cursor-pointer" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner relative w-full h-full duration-500 rounded-2xl shadow-sm">
+            <div class="flip-card-front absolute inset-0 glass-card rounded-2xl p-6 flex flex-col items-center justify-center text-center border-2 border-softRose/30">
+              <i data-lucide="sun" class="w-8 h-8 text-softRose mb-2"></i>
+              <h3 class="font-serif font-bold text-deepRose">Your Gentle Soul</h3>
+              <p class="text-xs text-deepRose/60 mt-1">Click to flip ✨</p>
+            </div>
+            <div class="flip-card-back absolute inset-0 bg-warmBlush text-deepRose rounded-2xl p-6 flex items-center justify-center text-center font-bold text-xs sm:text-sm">
+              You feel deeply because you care deeply. That sensitivity is a superpower, not a weakness.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DAILY WARM HUG & AFFIRMATION GENERATOR -->
+    <section class="glass-card rounded-3xl p-8 text-center space-y-6 max-w-2xl mx-auto border-2 border-softRose/40">
+      <div class="w-12 h-12 bg-softRose/20 rounded-full flex items-center justify-center mx-auto text-deepRose">
+        <i data-lucide="coffee" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h3 class="font-serif text-2xl font-bold text-deepRose">Areeba Api's Pocket Hug</h3>
+        <p class="text-xs sm:text-sm text-deepRose/70 mt-1">Whenever you feel anxious or overwhelmed, press this button for a little cozy reassurance.</p>
+      </div>
+
+      <div id="hugDisplay" class="min-h-[70px] flex items-center justify-center bg-white/80 rounded-2xl p-4 border border-dashed border-softRose text-sm sm:text-base font-medium text-deepRose italic transition-all">
+        "Press the button below whenever you need a reminder of how safe and valued you are!"
+      </div>
+
+      <button onclick="generateHug()" class="px-6 py-3 bg-gradient-to-r from-softRose to-deepRose text-white font-bold rounded-2xl shadow-lg hover:opacity-95 transition-all text-sm flex items-center gap-2 mx-auto hover:scale-105 active:scale-95">
+        <i data-lucide="heart" class="w-4 h-4 fill-current"></i> Give Me A Cozy Reminder
+      </button>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="text-center py-6 text-xs text-deepRose/50 border-t border-softRose/20 mt-12">
+    Made with infinite love, soft tea, and warm hugs for Areeba Api 💕
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Affirmations / Hugs List
+    const affirmations = [
+      "Areeba Api, you don't have to carry the weight of things you can't control.",
+      "Your worth isn't measured by how easily you talk to strangers. You are complete as you are.",
+      "Stepping away from places that drain you is a act of self-respect, not selfishness.",
+      "You are so ridiculously smart—Algebra and Finance have nothing on your brilliant mind!",
+      "I bloom in life simply because I have you to look up to.",
+      "Take a deep breath. You survived everything you thought would break you. You're doing so well.",
+      "Your soft heart is a gift to this world, even when the world feels too loud."
+    ];
+
+    let noClickCount = 0;
+
+    // Handle 'NO' button interaction in Popup
+    function handleNoClick() {
+      const noBtn = document.getElementById('noBtn');
+      const yesBtn = document.getElementById('yesBtn');
+      const subMsg = document.getElementById('subPopupMsg');
+
+      noClickCount++;
+
+      if (noClickCount === 1) {
+        noBtn.innerText = "Are you sure?";
+        subMsg.innerText = "Nuh-uh! Everything IS going to be alright, Api! 🌸";
+      } else if (noClickCount === 2) {
+        noBtn.innerText = "Yes it will!";
+        noBtn.className = "px-6 py-2.5 rounded-xl bg-softRose text-white font-bold transition-all text-sm";
+      } else {
+        // Transform NO button into YES
+        noBtn.style.display = "none";
+        yesBtn.className = "w-full py-3 rounded-xl bg-deepRose text-white font-bold text-base shadow-lg animate-bounce";
+        yesBtn.innerText = "YES! I Believe It! 💕";
+        subMsg.innerText = "That's more like it! Click YES to unlock your letter! ✨";
+      }
+    }
+
+    // Unlock Letter Action
+    function unlockLetter() {
+      const modal = document.getElementById('bunnyModal');
+      const main = document.getElementById('mainContent');
+
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.style.display = 'none';
+        main.classList.remove('opacity-0');
+        main.classList.add('opacity-100');
+        
+        // Trigger celebratory gentle confetti
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ['#FFB7C5', '#FFCCD5', '#E2A3B7', '#FFF0F3']
+        });
+      }, 500);
+    }
+
+    function forceOpenLetter() {
+      unlockLetter();
+    }
+
+    // Interactive Hug Generator
+    function generateHug() {
+      const display = document.getElementById('hugDisplay');
+      const randomText = affirmations[Math.floor(Math.random() * affirmations.length)];
+      
+      display.style.opacity = '0';
+      setTimeout(() => {
+        display.innerText = `"${randomText}"`;
+        display.style.opacity = '1';
+      }, 200);
+
+      // Trigger Floating Hearts
+      triggerHug();
+    }
+
+    // Heart Particle Burst
+    function triggerHug() {
+      confetti({
+        particleCount: 35,
+        angle: 90,
+        spread: 50,
+        origin: { y: 0.8 },
+        shapes: ['circle'],
+        colors: ['#FFB7C5', '#FFCCD5', '#9E4A62']
+      });
+    }
+
+    // Ambient Petal Floating Canvas
+    const canvas = document.getElementById('petalCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const petals = [];
+    const petalCount = 25;
+
+    class Petal {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = -20;
+        this.size = Math.random() * 8 + 6;
+        this.speedY = Math.random() * 1 + 0.5;
+        this.speedX = Math.random() * 0.6 - 0.3;
+        this.opacity = Math.random() * 0.5 + 0.3;
+        this.rotation = Math.random() * 360;
+        this.rotSpeed = Math.random() * 1 - 0.5;
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.rotation += this.rotSpeed;
+        if (this.y > canvas.height + 20) {
+          this.reset();
+        }
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = '#FFB7C5';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < petalCount; i++) {
+      petals.push(new Petal());
+    }
+
+    function animatePetals() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      petals.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animatePetals);
+    }
+    animatePetals();
+
+    // Simple Web Audio Synthesizer for Ambient Chimes (No external audio files needed)
+    let audioCtx = null;
+    let isPlaying = false;
+    let timer = null;
+
+    function toggleAudio() {
+      const musicText = document.getElementById('musicText');
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (!isPlaying) {
+        isPlaying = true;
+        musicText.innerText = "Playing Soft Melody 🌸";
+        playCozyNote();
+        timer = setInterval(playCozyNote, 2500);
+      } else {
+        isPlaying = false;
+        musicText.innerText = "Play Cozy Sound";
+        clearInterval(timer);
+      }
+    }
+
+    function playCozyNote() {
+      if (!isPlaying || !audioCtx) return;
+      const notes = [261.63, 329.63, 392.00, 523.25, 440.00]; // C, E, G, C, A
+      const freq = notes[Math.floor(Math.random() * notes.length)];
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.4);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 2.5);
+    }
+  </script>
+</body>
+</html>
